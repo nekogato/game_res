@@ -33,6 +33,8 @@ const ui = {
   resultBody: document.getElementById("resultBody"),
   resultContinue: document.getElementById("resultContinueBtn"),
   restart: document.getElementById("restartBtn"),
+  introPopup: document.getElementById("introPopup"),
+  introConfirm: document.getElementById("introConfirmBtn"),
   toast: document.getElementById("toast"),
   toolbox: document.querySelector(".toolbox"),
   open: document.getElementById("openBtn"),
@@ -51,7 +53,7 @@ const baseCellW = interior.w / 30;
 const grid = { cols: 24, rows: 12, x: interior.x + baseCellW * 3, y: interior.y, w: baseCellW, h: interior.h / 12 };
 const streetY = 642;
 const INGREDIENT_COST = 12;
-const DEBUG_VERSION = "v69";
+const DEBUG_VERSION = "v72";
 const SEATED_Y_OFFSET = -25;
 const WEEKLY_RENT = 5000;
 const VICTORY_CASH = 300000;
@@ -156,6 +158,7 @@ let paused = false;
 let debugInfo = { frames: 0, lastError: "", lastPlaced: "" };
 const customerPopups = new Map();
 const staffPopups = new Map();
+const popupPortraitCache = new Map();
 let kitchenPopup = null;
 let pendingTableSpots = [];
 
@@ -686,6 +689,7 @@ function resetGame() {
   state.menu = createMenuDefaults();
   ui.unlockPopup.hidden = true;
   ui.resultPopup.hidden = true;
+  ui.introPopup.hidden = false;
   ui.tablePurchasePopup.hidden = true;
   ui.menu.hidden = true;
   ui.recruit.hidden = true;
@@ -698,7 +702,8 @@ function resetGame() {
   fillMenuInputs();
   renderRecruitPanel();
   ui.pause.textContent = "暫停";
-  flash("物件會吸附到網格。餐桌、廚房和廁所都需要先設置；門口固定在網格下方中間。");
+  state.messageTimer = 0;
+  ui.toast.style.opacity = "0";
 }
 
 function startNextDay() {
@@ -1902,22 +1907,67 @@ function drawCustomerSprite(actor, x, y, w, h, moving = false, facing = null) {
   ctx.drawImage(sheet, frame * cell, row * cell, cell, cell, x - w / 2, y - h / 2, w, h);
 }
 
+function spriteFrameSrc(sheet, frame = 0, row = 0, cell = 128) {
+  if (!sheet) return "";
+  const cacheKey = `${sheet.src}:${frame}:${row}:${cell}`;
+  if (popupPortraitCache.has(cacheKey)) return popupPortraitCache.get(cacheKey);
+  const off = document.createElement("canvas");
+  off.width = cell;
+  off.height = cell;
+  const ox = off.getContext("2d");
+  ox.drawImage(sheet, frame * cell, row * cell, cell, cell, 0, 0, cell, cell);
+  const src = off.toDataURL("image/png");
+  popupPortraitCache.set(cacheKey, src);
+  return src;
+}
+
+function customerPortraitSrc(customer) {
+  if (isCustomerSeated(customer)) {
+    const sitSprite = customer.walkVariant === 1 ? assets.customerFemaleSit : assets.customerSit;
+    if (sitSprite?.src) return sitSprite.src;
+  }
+  const sheet = assets.customerWalks?.[(customer.walkVariant ?? 0) % (assets.customerWalks.length || 1)];
+  return spriteFrameSrc(sheet, 0, 0) || `assets/sprites/customer-${customer.variant % spriteCounts.customer}.png?v=17`;
+}
+
+function waiterPortraitSrc(waiter) {
+  return spriteFrameSrc(assets.waiterWalk, 0, 0) || `assets/sprites/waiter-${waiter.variant % spriteCounts.waiter}.png?v=21`;
+}
+
 function isCustomerSeated(actor) {
   return actor?.type !== "waiter" && actor?.table && ["入座", "思考", "點餐", "等餐", "用餐", "結帳"].includes(actor.state);
 }
 
+function bubbleDisplayText(text) {
+  return {
+    "...": "🤔",
+    "等位": "🪑",
+    "點菜": "🙋🏻‍♂️",
+    "等待上菜": "👀",
+    "上菜": "🍳",
+    "結帳": "💵",
+    "用餐": "🍽️",
+    "滿足": "😊",
+    "憤怒": "😡",
+    "清潔中": "清潔中",
+    "骯髒": "骯髒"
+  }[text] || text;
+}
+
 function drawBubble(x, y, text, color = "#fff4cf") {
+  const displayText = bubbleDisplayText(text);
+  const isEmoji = displayText !== text;
   ctx.save();
-  ctx.font = "700 18px sans-serif";
-  const tw = ctx.measureText(text).width;
+  ctx.font = isEmoji ? "24px Apple Color Emoji, Segoe UI Emoji, sans-serif" : "700 18px sans-serif";
+  const tw = ctx.measureText(displayText).width;
   ctx.fillStyle = color;
   ctx.strokeStyle = "rgba(56,36,10,.35)";
   ctx.lineWidth = 3;
-  roundRect(x - tw / 2 - 12, y - 32, tw + 24, 26, 8);
+  roundRect(x - tw / 2 - 12, y - 34, tw + 24, 30, 8);
   ctx.fill();
   ctx.stroke();
   ctx.fillStyle = "#2b2114";
-  ctx.fillText(text, x - tw / 2, y - 13);
+  ctx.fillText(displayText, x - tw / 2, y - 12);
   ctx.restore();
 }
 
@@ -2303,7 +2353,7 @@ function updateCustomerPopup(record) {
     ? `${formatSeconds(customer.needTimer)} / ${formatSeconds(customer.needLimit)}`
     : "不適用";
   head.textContent = `${customer.tierLabel || "食客"}食客`;
-  img.src = `assets/sprites/customer-${customer.variant % spriteCounts.customer}.png?v=17`;
+  img.src = customerPortraitSrc(customer);
   data.innerHTML = `
     <div><span>即時狀態</span> ${customerStatusText(customer)}</div>
     <div><span>現時活動</span> ${activityName(customer)}</div>
@@ -2424,7 +2474,7 @@ function updateStaffPopup(record) {
     .map(([, skill]) => `${skill.label} Lv.${skill.level} (${skill.xp}/${xpNeeded(skill.level)})`)
     .join("<br>");
   head.textContent = `員工 ${waiter.label}`;
-  img.src = `assets/sprites/waiter-${waiter.variant % spriteCounts.waiter}.png?v=21`;
+  img.src = waiterPortraitSrc(waiter);
   data.innerHTML = `
     <div><span>即時狀態</span> ${waiter.state}</div>
     <div><span>薪金</span> $${waiter.stats.salary}</div>
@@ -2610,6 +2660,10 @@ ui.open.addEventListener("click", openRestaurant);
 ui.continue.addEventListener("click", startNextDay);
 ui.resultContinue.addEventListener("click", hideResultPopup);
 ui.restart.addEventListener("click", resetGame);
+ui.introConfirm.addEventListener("click", () => {
+  ui.introPopup.hidden = true;
+  flash("先放好餐桌、廚房和廁所，設定菜單後便可正式開店營業。");
+});
 ui.addTable.addEventListener("click", addTable);
 ui.deleteTable.addEventListener("click", deleteSelectedTable);
 ui.menuButton.addEventListener("click", () => {
