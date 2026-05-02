@@ -1276,7 +1276,7 @@ function activityName(customer) {
   if (customer.state === "等待中" || customer.state === "帶位中") return "等位";
   if (customer.state === "思考") return "思考點菜";
   if (customer.state === "點餐") return "點餐";
-  if (customer.state === "等餐") return "等待上菜";
+  if (customer.state === "等餐") return "等餐";
   if (customer.state === "用餐") return customer.usedToilet ? "用餐/已用廁" : "用餐";
   if (customer.state === "結帳") return "結帳";
   if (customer.state === "離開") return customer.leavingMood || "離開";
@@ -1590,7 +1590,7 @@ function updateWaiter(waiter, dt) {
       task.customer.cookTimer = menuItem.cookTime || 6;
       task.customer.table.order = "waiting";
       task.customer.state = "等餐";
-      setNeed(task.customer, "等待上菜", NEED_LIMITS.food);
+      setNeed(task.customer, "等餐", NEED_LIMITS.food);
       finishWaiterTask(waiter);
     }
   }
@@ -1941,12 +1941,12 @@ function isCustomerSeated(actor) {
 function bubbleDisplayText(text) {
   return {
     "...": "🤔",
-    "等位": "🪑",
-    "點菜": "🙋🏻‍♂️",
-    "等待上菜": "👀",
-    "上菜": "🍳",
-    "結帳": "💵",
-    "用餐": "🍽️",
+    "等位": "等位",
+    "點菜": "點菜",
+    "等餐": "等餐",
+    "上菜": "上菜",
+    "結帳": "結帳",
+    "用餐": "用餐",
     "滿足": "😊",
     "憤怒": "😡",
     "清潔中": "清潔中",
