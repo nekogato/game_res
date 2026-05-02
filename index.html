@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>晨光西餐廳</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="topbar" aria-label="遊戲控制列">
+        <div class="brand">
+          <strong>晨光西餐廳</strong>
+          <span id="phaseLabel">佈置餐廳</span>
+        </div>
+        <div class="meters">
+          <span id="clock">清晨準備</span>
+          <span id="cash">現金 $10000</span>
+          <span id="served">0 單</span>
+          <span id="satisfaction">滿意度 50</span>
+        </div>
+        <div class="actions">
+          <button id="pauseBtn" type="button">暫停</button>
+          <button id="speedBtn" type="button">2x</button>
+          <button id="resetBtn" type="button">重置</button>
+        </div>
+      </section>
+
+      <section class="game-wrap">
+        <canvas id="game" width="1280" height="720" aria-label="餐廳遊戲畫面"></canvas>
+        <div id="toast" class="toast">先放餐桌、廚房和至少一位侍應。</div>
+        <div class="toolbox" aria-label="佈置工具">
+          <button id="addTableBtn" class="tool" type="button">增加餐桌</button>
+          <button id="deleteTableBtn" class="tool" type="button" disabled>刪除餐桌</button>
+        </div>
+        <div id="menuPanel" class="menu-panel setup-popup" aria-label="菜單設定" hidden>
+          <div class="panel-head">
+            <div class="menu-title">今日菜單</div>
+            <button id="menuCloseBtn" class="panel-close" type="button">×</button>
+          </div>
+          <div class="menu-grid menu-head">
+            <span>菜式</span><span>成本</span><span>售價</span><span>份數</span><span>烹調</span><span>評價</span>
+          </div>
+          <div id="menuRows"></div>
+          <div class="settlement-actions">
+            <button id="menuConfirmBtn" type="button">確認</button>
+          </div>
+        </div>
+        <div id="tablePurchasePopup" class="unlock-popup" hidden>
+          <div class="unlock-card result-card">
+            <div class="unlock-title">購買餐桌</div>
+            <div id="tablePurchaseBody" class="result-body"></div>
+            <label class="purchase-qty">
+              <span>數量</span>
+              <input id="tablePurchaseQty" type="number" min="1" step="1" value="1">
+            </label>
+            <div class="result-actions">
+              <button id="tablePurchaseCancelBtn" type="button">取消</button>
+              <button id="tablePurchaseConfirmBtn" type="button">購買</button>
+            </div>
+          </div>
+        </div>
+        <div id="recruitPanel" class="recruit-panel setup-popup" aria-label="招聘侍應" hidden>
+          <div class="panel-head">
+            <div class="recruit-title">侍應招聘</div>
+            <button id="recruitCloseBtn" class="panel-close" type="button">×</button>
+          </div>
+          <div class="recruit-subtitle">已聘侍應</div>
+          <div id="hiredRows" class="staff-list"></div>
+          <div class="recruit-subtitle">招聘名單</div>
+          <div id="candidateRows" class="staff-list"></div>
+        </div>
+        <div id="unlockPopup" class="unlock-popup" hidden>
+          <div class="unlock-card">
+            <div class="unlock-title">新菜式解鎖</div>
+            <div id="unlockList" class="unlock-list"></div>
+            <button id="unlockCloseBtn" type="button">知道了</button>
+          </div>
+        </div>
+        <div id="settlementPopup" class="settlement-popup setup-popup" hidden>
+          <div class="panel-head">
+            <div>一天營業完結</div>
+          </div>
+          <div id="settlementBody" class="settlement-body"></div>
+          <div class="settlement-actions">
+            <button id="continueBtn" type="button">繼續</button>
+          </div>
+        </div>
+        <div id="resultPopup" class="unlock-popup" hidden>
+          <div class="unlock-card result-card">
+            <div id="resultTitle" class="unlock-title">結果</div>
+            <div id="resultBody" class="result-body"></div>
+            <div class="result-actions">
+              <button id="resultContinueBtn" type="button">繼續</button>
+              <button id="restartBtn" type="button">重新開始</button>
+            </div>
+          </div>
+        </div>
+        <div id="customerPopups" class="customer-popups" aria-label="食客狀態視窗"></div>
+        <div class="game-actions" aria-label="主要流程控制">
+          <button id="menuBtn" type="button">菜單</button>
+          <button id="recruitBtn" type="button">招聘</button>
+          <button id="openBtn" type="button">開店</button>
+        </div>
+      </section>
+    </main>
+    <script src="game.js?v=69"></script>
+  </body>
+</html>
