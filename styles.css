@@ -405,10 +405,13 @@ canvas {
 .kitchen-popup {
   width: 430px;
   max-width: calc(100% - 24px);
+  max-height: calc(100% - 24px);
 }
 
 .kitchen-popup .popup-body {
   display: block;
+  max-height: 360px;
+  overflow-y: auto;
 }
 
 .kitchen-data {

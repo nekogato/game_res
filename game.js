@@ -38,6 +38,9 @@ const ui = {
   morningNoticePopup: document.getElementById("morningNoticePopup"),
   morningNoticeBody: document.getElementById("morningNoticeBody"),
   morningNoticeConfirm: document.getElementById("morningNoticeConfirmBtn"),
+  mediaPopup: document.getElementById("mediaPopup"),
+  mediaBody: document.getElementById("mediaBody"),
+  mediaConfirm: document.getElementById("mediaConfirmBtn"),
   toast: document.getElementById("toast"),
   toolbox: document.querySelector(".toolbox"),
   open: document.getElementById("openBtn"),
@@ -56,16 +59,19 @@ const baseCellW = interior.w / 30;
 const grid = { cols: 24, rows: 12, x: interior.x + baseCellW * 3, y: interior.y, w: baseCellW, h: interior.h / 12 };
 const streetY = 642;
 const INGREDIENT_COST = 12;
-const DEBUG_VERSION = "v80";
+const DEBUG_VERSION = "v82";
 const GAME_OVER_NEGATIVE_DAYS = 7;
 const SEATED_Y_OFFSET = -13;
-const WEEKLY_RENT = 5000;
+const WEEKLY_RENT = 3000;
 const VICTORY_CASH = 300000;
 const TABLE_COST = 250;
 const SHOW_DEBUG = false;
 const QUEUE_PER_ROW = 8;
-const QUEUE_ROWS = 2;
-const QUEUE_LIMIT = QUEUE_PER_ROW * QUEUE_ROWS;
+const BASE_QUEUE_ROWS = 2;
+const HIGH_SATISFACTION_QUEUE_ROWS = 3;
+const QUEUE_ROW_UPGRADE_SATISFACTION = 300;
+const MEDIA_VISIT_SATISFACTION = 500;
+const MEDIA_VISIT_CHANCE_PER_SECOND = 0.00045;
 const NEED_LIMITS = {
   waiting: 34,
   food: 48,
@@ -182,6 +188,9 @@ const state = {
   negativeSatisfactionDays: 0,
   victoryShown: false,
   gameOver: false,
+  mediaVisitedToday: false,
+  mediaPeakToday: false,
+  mediaPeakTomorrow: false,
   lost: 0,
   walkouts: 0,
   wastedFood: 0,
@@ -404,9 +413,15 @@ function showMorningNoticePopup() {
   if (state.day % 7 === 0) notices.push(`今天需要交租，租金是 $${WEEKLY_RENT}。`);
   if (state.cash < 0 && state.negativeCashDays > 0) notices.push(`現金現在是負數；連續 ${GAME_OVER_NEGATIVE_DAYS} 天負數就會被總公司辭退，今天是現金連續負數第 ${state.negativeCashDays} 天。`);
   if (state.satisfaction < 0 && state.negativeSatisfactionDays > 0) notices.push(`滿意度現在是負數；連續 ${GAME_OVER_NEGATIVE_DAYS} 天負數就會被總公司辭退，今天是滿意度連續負數第 ${state.negativeSatisfactionDays} 天。`);
+  if (state.mediaPeakToday) notices.push("昨天的媒體訪問開始發酵了，今天全日都會像熱門時段一樣多人留意餐廳。");
   if (!notices.length) return;
   ui.morningNoticeBody.innerHTML = notices.map(text => `<div>${text}</div>`).join("");
   ui.morningNoticePopup.hidden = false;
+}
+
+function showMediaPopup() {
+  ui.mediaBody.textContent = "有雜誌和電視台來做訪問，拍攝一間近期相當受歡迎的餐廳。這次曝光會在明天發酵，明天全日也會變成熱門時段。";
+  ui.mediaPopup.hidden = false;
 }
 
 function menuLeftovers() {
@@ -687,6 +702,9 @@ function resetGame() {
   state.negativeSatisfactionDays = 0;
   state.victoryShown = false;
   state.gameOver = false;
+  state.mediaVisitedToday = false;
+  state.mediaPeakToday = false;
+  state.mediaPeakTomorrow = false;
   state.lost = 0;
   state.walkouts = 0;
   state.wastedFood = 0;
@@ -706,6 +724,7 @@ function resetGame() {
   ui.resultPopup.hidden = true;
   ui.introPopup.hidden = false;
   ui.morningNoticePopup.hidden = true;
+  ui.mediaPopup.hidden = true;
   ui.tablePurchasePopup.hidden = true;
   ui.menu.hidden = true;
   ui.recruit.hidden = true;
@@ -741,6 +760,9 @@ function startNextDay() {
   state.customers.length = 0;
   state.passers.length = 0;
   state.tasks.length = 0;
+  state.mediaVisitedToday = false;
+  state.mediaPeakToday = state.mediaPeakTomorrow;
+  state.mediaPeakTomorrow = false;
   refreshRecruitAvailability(true);
   state.menu = createMenuForNewDay();
   for (const table of state.tables) {
@@ -759,6 +781,7 @@ function startNextDay() {
   ui.menu.hidden = true;
   ui.recruit.hidden = true;
   ui.settlement.hidden = true;
+  ui.mediaPopup.hidden = true;
   ensureStaffStartPositions();
   fillMenuInputs();
   renderRecruitPanel();
@@ -1386,16 +1409,40 @@ function dirtyToiletTasks() {
 }
 
 function isPeakHour() {
+  if (state.mediaPeakToday) return true;
   return (
     (state.time >= LUNCH_PEAK.start && state.time < LUNCH_PEAK.end) ||
     (state.time >= DINNER_PEAK.start && state.time < DINNER_PEAK.end)
   );
 }
 
+function satisfactionAttraction() {
+  return Math.max(0, Math.min(2.2, (state.satisfaction - 50) / 450));
+}
+
 function trafficProfile() {
   if (state.mode !== "open" || state.time >= 22 * 60 || isMenuSoldOut()) return { spawnMin: 1.2, spawnMax: 1.8, enterChance: 0 };
-  if (isPeakHour()) return { spawnMin: 0.35, spawnMax: 0.8, enterChance: 0.62 };
-  return { spawnMin: 1.2, spawnMax: 1.9, enterChance: 0.3 };
+  const attraction = satisfactionAttraction();
+  const peak = isPeakHour();
+  const base = peak
+    ? { spawnMin: 0.35, spawnMax: 0.8, enterChance: 0.62 }
+    : { spawnMin: 1.2, spawnMax: 1.9, enterChance: 0.3 };
+  const flowMultiplier = Math.min(2.6, 1 + attraction * 0.45);
+  return {
+    spawnMin: base.spawnMin / flowMultiplier,
+    spawnMax: base.spawnMax / flowMultiplier,
+    enterChance: Math.min(0.92, base.enterChance + attraction * (peak ? 0.08 : 0.18))
+  };
+}
+
+function maybeTriggerMediaVisit(dt) {
+  if (state.mediaVisitedToday || state.satisfaction <= MEDIA_VISIT_SATISFACTION || state.mode !== "open") return;
+  if (state.time >= 22 * 60 || isMenuSoldOut()) return;
+  const reputationBoost = Math.min(2.4, state.satisfaction / MEDIA_VISIT_SATISFACTION);
+  if (Math.random() >= MEDIA_VISIT_CHANCE_PER_SECOND * reputationBoost * dt) return;
+  state.mediaVisitedToday = true;
+  state.mediaPeakTomorrow = true;
+  showMediaPopup();
 }
 
 function waitingCustomers() {
@@ -1404,6 +1451,14 @@ function waitingCustomers() {
 
 function queuedCustomers() {
   return state.customers.filter(customer => customer.state === "等待中" || customer.state === "帶位中");
+}
+
+function queueRows() {
+  return state.satisfaction > QUEUE_ROW_UPGRADE_SATISFACTION ? HIGH_SATISFACTION_QUEUE_ROWS : BASE_QUEUE_ROWS;
+}
+
+function queueLimit() {
+  return QUEUE_PER_ROW * queueRows();
 }
 
 function queueSpot(index) {
@@ -1771,7 +1826,7 @@ function updatePassers(dt) {
   const entrancePixels = doorPixels();
   for (const passer of [...state.passers]) {
     passer.x += passer.dir * passer.speed * dt;
-    if (passer.enter && entrance && state.time < 22 * 60 && !isMenuSoldOut() && Math.abs(passer.x - entrancePixels.x) < 16 && queuedCustomers().length < QUEUE_LIMIT) {
+    if (passer.enter && entrance && state.time < 22 * 60 && !isMenuSoldOut() && Math.abs(passer.x - entrancePixels.x) < 16 && queuedCustomers().length < queueLimit()) {
       const queueIndex = queuedCustomers().length;
       const spot = queueSpot(queueIndex);
       const profile = createCustomerProfile();
@@ -1824,6 +1879,7 @@ function update(dt) {
   if (!paused && state.mode === "open") state.time += scaled * 4;
   if (!paused && (state.mode === "open" || state.mode === "ended")) updatePassers(scaled);
   if (!paused && state.mode === "open") {
+    maybeTriggerMediaVisit(scaled);
     assignTasks();
     for (const waiter of state.waiters) {
       if (state.time >= 22 * 60 && waiter.task) {
@@ -2523,13 +2579,14 @@ function openKitchenPopup(kitchen, screenPoint) {
 function updateKitchenPopup() {
   if (!kitchenPopup) return;
   const data = kitchenPopup.el.querySelector(".kitchen-data");
-  data.innerHTML = Object.values(state.menu).map(food => `
+  const offeredFoods = Object.values(state.menu).filter(food => food.offeredToday);
+  data.innerHTML = offeredFoods.length ? offeredFoods.map(food => `
     <div class="kitchen-row">
       <strong>${food.name}</strong>
       <span>剩餘 ${food.stock} / 今日點 ${food.todayOrders || 0} / 總點 ${food.totalOrders || 0}</span>
       <span>今日評價 ${food.todayRating || 0} / 總評價 ${food.totalRating || 0}</span>
     </div>
-  `).join("");
+  `).join("") : `<div class="kitchen-row"><span>今天沒有準備任何可供點選的菜式。</span></div>`;
 }
 
 function updateStaffPopup(record) {
@@ -2739,6 +2796,9 @@ ui.introConfirm.addEventListener("click", () => {
 });
 ui.morningNoticeConfirm.addEventListener("click", () => {
   ui.morningNoticePopup.hidden = true;
+});
+ui.mediaConfirm.addEventListener("click", () => {
+  ui.mediaPopup.hidden = true;
 });
 ui.addTable.addEventListener("click", addTable);
 ui.deleteTable.addEventListener("click", deleteSelectedTable);
