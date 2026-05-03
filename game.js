@@ -59,7 +59,7 @@ const baseCellW = interior.w / 30;
 const grid = { cols: 24, rows: 12, x: interior.x + baseCellW * 3, y: interior.y, w: baseCellW, h: interior.h / 12 };
 const streetY = 642;
 const INGREDIENT_COST = 12;
-const DEBUG_VERSION = "v82";
+const DEBUG_VERSION = "v83";
 const GAME_OVER_NEGATIVE_DAYS = 7;
 const SEATED_Y_OFFSET = -13;
 const WEEKLY_RENT = 3000;
@@ -129,9 +129,19 @@ const STAFF_CANDIDATES = [
   { id: "ho", name: "浩然", salary: 50, base: { charm: 3, patience: 4 }, skills: { serve: 2, seat: 1, checkout: 2, toilet: 1 } },
   { id: "sum", name: "心怡", salary: 68, base: { charm: 4, patience: 4 }, skills: { serve: 2, seat: 3, checkout: 2, toilet: 1 } },
   { id: "ming", name: "明叔", salary: 60, base: { charm: 2, patience: 6 }, skills: { serve: 1, seat: 1, checkout: 3, toilet: 3 } },
-  { id: "tung", name: "東東", salary: 82, base: { charm: 5, patience: 4 }, skills: { serve: 4, seat: 2, checkout: 2, toilet: 1 } }
+  { id: "tung", name: "東東", salary: 82, base: { charm: 5, patience: 4 }, skills: { serve: 4, seat: 2, checkout: 2, toilet: 1 } },
+  { id: "yuki", name: "雪兒", salary: 46, base: { charm: 4, patience: 2 }, skills: { serve: 1, seat: 3, checkout: 1, toilet: 1 } },
+  { id: "kit", name: "阿傑", salary: 56, base: { charm: 3, patience: 5 }, skills: { serve: 2, seat: 2, checkout: 1, toilet: 2 } },
+  { id: "nora", name: "諾拉", salary: 74, base: { charm: 6, patience: 3 }, skills: { serve: 3, seat: 3, checkout: 1, toilet: 1 } },
+  { id: "boris", name: "保羅", salary: 66, base: { charm: 2, patience: 6 }, skills: { serve: 2, seat: 1, checkout: 2, toilet: 3 } },
+  { id: "ivy", name: "雅薇", salary: 62, base: { charm: 5, patience: 4 }, skills: { serve: 2, seat: 2, checkout: 2, toilet: 1 } },
+  { id: "sam", name: "阿森", salary: 54, base: { charm: 3, patience: 3 }, skills: { serve: 3, seat: 1, checkout: 1, toilet: 1 } },
+  { id: "coco", name: "可兒", salary: 70, base: { charm: 5, patience: 3 }, skills: { serve: 1, seat: 4, checkout: 2, toilet: 1 } },
+  { id: "jacky", name: "家俊", salary: 78, base: { charm: 4, patience: 5 }, skills: { serve: 3, seat: 2, checkout: 3, toilet: 1 } },
+  { id: "miki", name: "美紀", salary: 49, base: { charm: 4, patience: 4 }, skills: { serve: 1, seat: 1, checkout: 2, toilet: 2 } },
+  { id: "unclewah", name: "華叔", salary: 88, base: { charm: 3, patience: 7 }, skills: { serve: 2, seat: 1, checkout: 4, toilet: 3 } }
 ];
-const FEMALE_STAFF_IDS = new Set(["mei", "yan", "ling", "sum"]);
+const FEMALE_STAFF_IDS = new Set(["mei", "yan", "ling", "sum", "yuki", "nora", "ivy", "coco", "miki"]);
 
 const objectConfig = {
   table: { cols: 1, rows: 1, drawW: 56, drawH: 50, blocks: true, label: "餐桌" },
