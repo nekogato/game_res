@@ -56,7 +56,7 @@ const baseCellW = interior.w / 30;
 const grid = { cols: 24, rows: 12, x: interior.x + baseCellW * 3, y: interior.y, w: baseCellW, h: interior.h / 12 };
 const streetY = 642;
 const INGREDIENT_COST = 12;
-const DEBUG_VERSION = "v79";
+const DEBUG_VERSION = "v80";
 const GAME_OVER_NEGATIVE_DAYS = 7;
 const SEATED_Y_OFFSET = -13;
 const WEEKLY_RENT = 5000;
@@ -2442,6 +2442,56 @@ function wirePopupChrome(popup, onClose) {
   });
 }
 
+function makePanelDraggable(panel, handleSelector) {
+  const handle = panel.querySelector(handleSelector);
+  if (!handle || panel.dataset.draggableReady) return;
+  panel.dataset.draggableReady = "1";
+  let drag = null;
+  handle.addEventListener("pointerdown", event => {
+    if (event.target.closest("button, input, select, textarea, label")) return;
+    const parent = panel.parentElement;
+    const parentRect = parent.getBoundingClientRect();
+    const rect = panel.getBoundingClientRect();
+    panel.style.position = "absolute";
+    panel.style.transform = "none";
+    panel.style.margin = "0";
+    panel.style.left = `${rect.left - parentRect.left}px`;
+    panel.style.top = `${rect.top - parentRect.top}px`;
+    drag = {
+      x: event.clientX,
+      y: event.clientY,
+      left: rect.left - parentRect.left,
+      top: rect.top - parentRect.top,
+      parent
+    };
+    handle.setPointerCapture(event.pointerId);
+    event.preventDefault();
+    event.stopPropagation();
+  });
+  handle.addEventListener("pointermove", event => {
+    if (!drag) return;
+    const parentRect = drag.parent.getBoundingClientRect();
+    const rect = panel.getBoundingClientRect();
+    const maxLeft = Math.max(0, parentRect.width - rect.width);
+    const maxTop = Math.max(0, parentRect.height - rect.height);
+    const nextLeft = Math.min(maxLeft, Math.max(0, drag.left + event.clientX - drag.x));
+    const nextTop = Math.min(maxTop, Math.max(0, drag.top + event.clientY - drag.y));
+    panel.style.left = `${nextLeft}px`;
+    panel.style.top = `${nextTop}px`;
+  });
+  handle.addEventListener("pointerup", () => {
+    drag = null;
+  });
+  handle.addEventListener("pointercancel", () => {
+    drag = null;
+  });
+}
+
+function initializeDraggablePopups() {
+  for (const popup of document.querySelectorAll(".setup-popup")) makePanelDraggable(popup, ".panel-head");
+  for (const card of document.querySelectorAll(".unlock-popup .unlock-card")) makePanelDraggable(card, ".unlock-title");
+}
+
 function updateStaffPopups() {
   for (const record of [...staffPopups.values()]) updateStaffPopup(record);
 }
@@ -2761,6 +2811,7 @@ ui.pause.addEventListener("click", () => {
   flash(paused ? "遊戲已暫停。" : "遊戲繼續。");
 });
 ui.reset.addEventListener("click", resetGame);
+initializeDraggablePopups();
 canvas.addEventListener("pointerdown", pointerDown);
 canvas.addEventListener("pointermove", pointerMove);
 canvas.addEventListener("pointerup", pointerUp);
