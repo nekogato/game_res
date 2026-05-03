@@ -59,7 +59,7 @@ const baseCellW = interior.w / 30;
 const grid = { cols: 24, rows: 12, x: interior.x + baseCellW * 3, y: interior.y, w: baseCellW, h: interior.h / 12 };
 const streetY = 642;
 const INGREDIENT_COST = 12;
-const DEBUG_VERSION = "v83";
+const DEBUG_VERSION = "v84";
 const GAME_OVER_NEGATIVE_DAYS = 7;
 const SEATED_Y_OFFSET = -13;
 const WEEKLY_RENT = 3000;
@@ -435,7 +435,7 @@ function showMediaPopup() {
 }
 
 function menuLeftovers() {
-  return Object.values(state.menu).map(food => ({
+  return Object.values(state.menu).filter(food => food.offeredToday).map(food => ({
     name: food.name,
     stock: food.stock,
     cost: food.cost,
