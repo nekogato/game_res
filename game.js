@@ -59,7 +59,7 @@ const baseCellW = interior.w / 30;
 const grid = { cols: 24, rows: 12, x: interior.x + baseCellW * 3, y: interior.y, w: baseCellW, h: interior.h / 12 };
 const streetY = 642;
 const INGREDIENT_COST = 12;
-const DEBUG_VERSION = "v84";
+const DEBUG_VERSION = "v85";
 const GAME_OVER_NEGATIVE_DAYS = 7;
 const SEATED_Y_OFFSET = -13;
 const WEEKLY_RENT = 3000;
@@ -69,9 +69,9 @@ const SHOW_DEBUG = false;
 const QUEUE_PER_ROW = 8;
 const BASE_QUEUE_ROWS = 2;
 const HIGH_SATISFACTION_QUEUE_ROWS = 3;
-const QUEUE_ROW_UPGRADE_SATISFACTION = 300;
-const MEDIA_VISIT_SATISFACTION = 500;
-const MEDIA_VISIT_CHANCE_PER_SECOND = 0.00045;
+const QUEUE_ROW_UPGRADE_SATISFACTION = 500;
+const MEDIA_VISIT_SATISFACTION = 600;
+const MEDIA_VISIT_CHANCE_PER_SECOND = 0.00145;
 const NEED_LIMITS = {
   waiting: 34,
   food: 48,
@@ -120,26 +120,26 @@ const CUSTOMER_TIERS = {
   high: { label: "高級", wait: 0.68, toiletUse: 0.3, toiletDirt: 18, dirtyAnger: 0.52, tasteNeed: 82, priceWeights: { low: 0.08, mid: 0.36, high: 0.56 } }
 };
 const STAFF_CANDIDATES = [
-  { id: "mei", name: "阿美", salary: 52, base: { charm: 4, patience: 4 }, skills: { serve: 2, seat: 2, checkout: 1, toilet: 1 } },
-  { id: "kin", name: "阿健", salary: 48, base: { charm: 2, patience: 5 }, skills: { serve: 1, seat: 2, checkout: 2, toilet: 1 } },
-  { id: "yan", name: "小欣", salary: 64, base: { charm: 5, patience: 3 }, skills: { serve: 3, seat: 2, checkout: 1, toilet: 1 } },
-  { id: "lok", name: "樂仔", salary: 44, base: { charm: 3, patience: 3 }, skills: { serve: 1, seat: 1, checkout: 1, toilet: 2 } },
-  { id: "fai", name: "輝哥", salary: 72, base: { charm: 2, patience: 5 }, skills: { serve: 3, seat: 1, checkout: 3, toilet: 1 } },
-  { id: "ling", name: "阿玲", salary: 58, base: { charm: 5, patience: 2 }, skills: { serve: 2, seat: 3, checkout: 1, toilet: 1 } },
-  { id: "ho", name: "浩然", salary: 50, base: { charm: 3, patience: 4 }, skills: { serve: 2, seat: 1, checkout: 2, toilet: 1 } },
-  { id: "sum", name: "心怡", salary: 68, base: { charm: 4, patience: 4 }, skills: { serve: 2, seat: 3, checkout: 2, toilet: 1 } },
-  { id: "ming", name: "明叔", salary: 60, base: { charm: 2, patience: 6 }, skills: { serve: 1, seat: 1, checkout: 3, toilet: 3 } },
-  { id: "tung", name: "東東", salary: 82, base: { charm: 5, patience: 4 }, skills: { serve: 4, seat: 2, checkout: 2, toilet: 1 } },
-  { id: "yuki", name: "雪兒", salary: 46, base: { charm: 4, patience: 2 }, skills: { serve: 1, seat: 3, checkout: 1, toilet: 1 } },
-  { id: "kit", name: "阿傑", salary: 56, base: { charm: 3, patience: 5 }, skills: { serve: 2, seat: 2, checkout: 1, toilet: 2 } },
-  { id: "nora", name: "諾拉", salary: 74, base: { charm: 6, patience: 3 }, skills: { serve: 3, seat: 3, checkout: 1, toilet: 1 } },
-  { id: "boris", name: "保羅", salary: 66, base: { charm: 2, patience: 6 }, skills: { serve: 2, seat: 1, checkout: 2, toilet: 3 } },
-  { id: "ivy", name: "雅薇", salary: 62, base: { charm: 5, patience: 4 }, skills: { serve: 2, seat: 2, checkout: 2, toilet: 1 } },
-  { id: "sam", name: "阿森", salary: 54, base: { charm: 3, patience: 3 }, skills: { serve: 3, seat: 1, checkout: 1, toilet: 1 } },
-  { id: "coco", name: "可兒", salary: 70, base: { charm: 5, patience: 3 }, skills: { serve: 1, seat: 4, checkout: 2, toilet: 1 } },
-  { id: "jacky", name: "家俊", salary: 78, base: { charm: 4, patience: 5 }, skills: { serve: 3, seat: 2, checkout: 3, toilet: 1 } },
-  { id: "miki", name: "美紀", salary: 49, base: { charm: 4, patience: 4 }, skills: { serve: 1, seat: 1, checkout: 2, toilet: 2 } },
-  { id: "unclewah", name: "華叔", salary: 88, base: { charm: 3, patience: 7 }, skills: { serve: 2, seat: 1, checkout: 4, toilet: 3 } }
+  { id: "mei", name: "阿美", salary: 520, base: { charm: 4, patience: 4 }, skills: { serve: 2, seat: 2, checkout: 1, toilet: 1 } },
+  { id: "kin", name: "阿健", salary: 480, base: { charm: 2, patience: 5 }, skills: { serve: 1, seat: 2, checkout: 2, toilet: 1 } },
+  { id: "yan", name: "小欣", salary: 640, base: { charm: 5, patience: 3 }, skills: { serve: 3, seat: 2, checkout: 1, toilet: 1 } },
+  { id: "lok", name: "樂仔", salary: 440, base: { charm: 3, patience: 3 }, skills: { serve: 1, seat: 1, checkout: 1, toilet: 2 } },
+  { id: "fai", name: "輝哥", salary: 720, base: { charm: 2, patience: 5 }, skills: { serve: 3, seat: 1, checkout: 3, toilet: 1 } },
+  { id: "ling", name: "阿玲", salary: 580, base: { charm: 5, patience: 2 }, skills: { serve: 2, seat: 3, checkout: 1, toilet: 1 } },
+  { id: "ho", name: "浩然", salary: 500, base: { charm: 3, patience: 4 }, skills: { serve: 2, seat: 1, checkout: 2, toilet: 1 } },
+  { id: "sum", name: "心怡", salary: 680, base: { charm: 4, patience: 4 }, skills: { serve: 2, seat: 3, checkout: 2, toilet: 1 } },
+  { id: "ming", name: "明叔", salary: 600, base: { charm: 2, patience: 6 }, skills: { serve: 1, seat: 1, checkout: 3, toilet: 3 } },
+  { id: "tung", name: "東東", salary: 820, base: { charm: 5, patience: 4 }, skills: { serve: 4, seat: 2, checkout: 2, toilet: 1 } },
+  { id: "yuki", name: "雪兒", salary: 460, base: { charm: 4, patience: 2 }, skills: { serve: 1, seat: 3, checkout: 1, toilet: 1 } },
+  { id: "kit", name: "阿傑", salary: 560, base: { charm: 3, patience: 5 }, skills: { serve: 2, seat: 2, checkout: 1, toilet: 2 } },
+  { id: "nora", name: "諾拉", salary: 740, base: { charm: 6, patience: 3 }, skills: { serve: 3, seat: 3, checkout: 1, toilet: 1 } },
+  { id: "boris", name: "保羅", salary: 660, base: { charm: 2, patience: 6 }, skills: { serve: 2, seat: 1, checkout: 2, toilet: 3 } },
+  { id: "ivy", name: "雅薇", salary: 620, base: { charm: 5, patience: 4 }, skills: { serve: 2, seat: 2, checkout: 2, toilet: 1 } },
+  { id: "sam", name: "阿森", salary: 540, base: { charm: 3, patience: 3 }, skills: { serve: 3, seat: 1, checkout: 1, toilet: 1 } },
+  { id: "coco", name: "可兒", salary: 700, base: { charm: 5, patience: 3 }, skills: { serve: 1, seat: 4, checkout: 2, toilet: 1 } },
+  { id: "jacky", name: "家俊", salary: 780, base: { charm: 4, patience: 5 }, skills: { serve: 3, seat: 2, checkout: 3, toilet: 1 } },
+  { id: "miki", name: "美紀", salary: 490, base: { charm: 4, patience: 4 }, skills: { serve: 1, seat: 1, checkout: 2, toilet: 2 } },
+  { id: "unclewah", name: "華叔", salary: 880, base: { charm: 3, patience: 7 }, skills: { serve: 2, seat: 1, checkout: 4, toilet: 3 } }
 ];
 const FEMALE_STAFF_IDS = new Set(["mei", "yan", "ling", "sum", "yuki", "nora", "ivy", "coco", "miki"]);
 
@@ -182,6 +182,7 @@ const staffPopups = new Map();
 const popupPortraitCache = new Map();
 let kitchenPopup = null;
 let pendingTableSpots = [];
+let placementIssue = null;
 
 const state = {
   day: 1,
@@ -204,6 +205,7 @@ const state = {
   lost: 0,
   walkouts: 0,
   wastedFood: 0,
+  angerCounts: {},
   dayEnded: false,
   tables: [],
   kitchens: [],
@@ -387,7 +389,7 @@ function receiveCash(amount) {
 function maybeShowVictory() {
   if (state.victoryShown || state.gameOver || state.cash < VICTORY_CASH) return;
   state.victoryShown = true;
-  showResultPopup("勝利", `餐廳現金已超過 $${VICTORY_CASH}！你已經把晨光西餐廳經營成城中名店。`, "victory");
+  showResultPopup("勝利", `餐廳現金已超過 $${VICTORY_CASH}！你已經把晨光西餐廳經營成城中名店。總公司對你的表現非常滿意，決定升你為總經理。今天是你的升職典禮！`, "victory");
 }
 
 function showResultPopup(title, body, mode) {
@@ -423,14 +425,14 @@ function showMorningNoticePopup() {
   if (state.day % 7 === 0) notices.push(`今天需要交租，租金是 $${WEEKLY_RENT}。`);
   if (state.cash < 0 && state.negativeCashDays > 0) notices.push(`現金現在是負數；連續 ${GAME_OVER_NEGATIVE_DAYS} 天負數就會被總公司辭退，今天是現金連續負數第 ${state.negativeCashDays} 天。`);
   if (state.satisfaction < 0 && state.negativeSatisfactionDays > 0) notices.push(`滿意度現在是負數；連續 ${GAME_OVER_NEGATIVE_DAYS} 天負數就會被總公司辭退，今天是滿意度連續負數第 ${state.negativeSatisfactionDays} 天。`);
-  if (state.mediaPeakToday) notices.push("昨天的媒體訪問開始發酵了，今天全日都會像熱門時段一樣多人留意餐廳。");
+  if (state.mediaPeakToday) notices.push("昨天的媒體訪問開始發酵了，今天到處都聽到人們在談論我們的餐廳！預料今日餐廳將會人頭湧湧。");
   if (!notices.length) return;
   ui.morningNoticeBody.innerHTML = notices.map(text => `<div>${text}</div>`).join("");
   ui.morningNoticePopup.hidden = false;
 }
 
 function showMediaPopup() {
-  ui.mediaBody.textContent = "有雜誌和電視台來做訪問，拍攝一間近期相當受歡迎的餐廳。這次曝光會在明天發酵，明天全日也會變成熱門時段。";
+  ui.mediaBody.textContent = "有雜誌和電視台來做訪問，拍攝一間近期相當受歡迎的餐廳。這次曝光會在明天發酵，請期待明天餐廳的人潮。";
   ui.mediaPopup.hidden = false;
 }
 
@@ -438,8 +440,18 @@ function menuLeftovers() {
   return Object.values(state.menu).filter(food => food.offeredToday).map(food => ({
     name: food.name,
     stock: food.stock,
+    sold: Math.max(0, (food.plannedStock ?? 0) - food.stock),
     cost: food.cost,
     value: food.cost * food.stock
+  }));
+}
+
+function angerCountsSummary() {
+  const order = ["waiting", "food", "checkout", "toilet", "soldout", "taste"];
+  return order.map(reason => ({
+    reason,
+    label: angerReasonText(reason),
+    count: state.angerCounts[reason] || 0
   }));
 }
 
@@ -718,6 +730,7 @@ function resetGame() {
   state.lost = 0;
   state.walkouts = 0;
   state.wastedFood = 0;
+  state.angerCounts = {};
   state.dayEnded = false;
   state.settlement = null;
   paused = false;
@@ -742,6 +755,7 @@ function resetGame() {
   selectedObject = null;
   pointerDrag = null;
   pendingTableSpots = [];
+  placementIssue = null;
   defaultSetup();
   ensureStaffStartPositions();
   fillMenuInputs();
@@ -764,6 +778,7 @@ function startNextDay() {
   state.lost = 0;
   state.walkouts = 0;
   state.wastedFood = 0;
+  state.angerCounts = {};
   state.dayEnded = false;
   state.settlement = null;
   state.waiters.length = 0;
@@ -788,6 +803,7 @@ function startNextDay() {
   }
   selectedObject = null;
   pointerDrag = null;
+  placementIssue = null;
   ui.menu.hidden = true;
   ui.recruit.hidden = true;
   ui.settlement.hidden = true;
@@ -938,6 +954,7 @@ function toiletCell(from) {
 }
 
 function validatePlacement() {
+  placementIssue = null;
   if (!state.tables.length || !state.kitchens.length || !state.toilets.length) {
     return "最少需要一張餐桌、一個廚房和一個廁所。";
   }
@@ -959,8 +976,14 @@ function validatePlacement() {
   if (!kitchenServiceCell(state.kitchens[0], blocked)) return "廚房正下方必須保留通道，侍應才可拿菜。";
   for (const table of state.tables) {
     const seat = nearestServiceCell(entrance, table, blocked);
-    if (!seat) return "門口到其中一張餐桌沒有可行路徑。";
-    if (!kitchenCell(seat.cell)) return "其中一張餐桌到廚房沒有可行路徑。";
+    if (!seat) {
+      placementIssue = { table, kind: "door" };
+      return "門口到其中一張餐桌沒有可行路徑。";
+    }
+    if (!kitchenCell(seat.cell)) {
+      placementIssue = { table, kind: "kitchen" };
+      return "其中一張餐桌到廚房沒有可行路徑。";
+    }
   }
   if (!toiletCell(entrance)) return "門口到廁所沒有可行路徑。";
   return "";
@@ -1118,7 +1141,8 @@ function settleDay() {
     net,
     negativeCashDays: state.negativeCashDays,
     negativeSatisfactionDays: state.negativeSatisfactionDays,
-    leftovers: menuLeftovers()
+    leftovers: menuLeftovers(),
+    angerCounts: { ...state.angerCounts }
   };
   adjustAllWaiterHappiness(50);
   state.dayEnded = true;
@@ -1240,6 +1264,7 @@ function sendCustomerAway(customer, mood, countAsLost = true, fromInside = true,
     adjustAllWaiterHappiness(0.45);
   }
   if (mood === "憤怒" && reason && SATISFACTION_DELTA[reason]) {
+    state.angerCounts[reason] = (state.angerCounts[reason] || 0) + 1;
     adjustSatisfaction(SATISFACTION_DELTA[reason]);
     adjustAllWaiterHappiness(-0.9);
   }
@@ -2094,6 +2119,7 @@ function render() {
     if (t.order === "served") drawAsset("food", t.variant, t.x , t.y , 21, 15);
     if (t.dirty) drawAsset("dirty", t.variant, t.x , t.y, 23, 15);
   }
+  drawPlacementIssue();
 
   if (state.mode === "setup") drawSetupStaff();
 
@@ -2209,6 +2235,28 @@ function drawSetupSelection() {
   ctx.restore();
 }
 
+function drawPlacementIssue() {
+  if (state.mode !== "setup" || !placementIssue?.table) return;
+  const table = placementIssue.table;
+  const source = placementIssue.kind === "kitchen" && state.kitchens[0]
+    ? objectCenter(state.kitchens[0])
+    : doorPixels();
+  ctx.save();
+  ctx.strokeStyle = "#ff1f1f";
+  ctx.fillStyle = "rgba(255, 31, 31, 0.14)";
+  ctx.lineWidth = 5;
+  ctx.setLineDash([12, 8]);
+  ctx.beginPath();
+  ctx.moveTo(source.x, source.y);
+  ctx.lineTo(table.x, table.y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  roundRect(table.x - table.w / 2 - 12, table.y - table.h / 2 - 12, table.w + 24, table.h + 24, 10);
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+}
+
 function drawSetupStaff() {
   ensureStaffStartPositions();
   for (const staff of hiredStaff()) {
@@ -2285,9 +2333,14 @@ function updateSettlementPopup() {
     net: state.gross - state.ingredientCost,
     negativeCashDays: state.negativeCashDays,
     negativeSatisfactionDays: state.negativeSatisfactionDays,
-    leftovers: menuLeftovers()
+    leftovers: menuLeftovers(),
+    angerCounts: { ...state.angerCounts }
   };
   const leftovers = result.leftovers || [];
+  const angerRows = angerCountsSummary().map(item => ({
+    ...item,
+    count: result.angerCounts?.[item.reason] || 0
+  }));
   ui.settlementBody.innerHTML = `
     <div class="settlement-summary">
       <div><span>總收入</span><strong>$${result.gross}</strong></div>
@@ -2305,7 +2358,11 @@ function updateSettlementPopup() {
     ${(result.rent || 0) > 0 ? `<div class="settlement-line">今日已交租 $${result.rent}</div>` : ""}
     <div class="settlement-subtitle">今日剩餘菜式</div>
     <div class="leftover-list">
-      ${leftovers.map(food => `<div>${food.name}: 剩 ${food.stock} 份（已計成本 $${food.value}）</div>`).join("")}
+      ${leftovers.map(food => `<div>${food.name}: 賣出 ${food.sold || 0} 份 / 剩 ${food.stock} 份（已計成本 $${food.value}）</div>`).join("")}
+    </div>
+    <div class="settlement-subtitle">食客不滿原因</div>
+    <div class="leftover-list">
+      ${angerRows.map(item => `<div>${item.label}: ${item.count} 次</div>`).join("")}
     </div>
   `;
 }
