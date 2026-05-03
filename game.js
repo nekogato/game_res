@@ -53,7 +53,7 @@ const baseCellW = interior.w / 30;
 const grid = { cols: 24, rows: 12, x: interior.x + baseCellW * 3, y: interior.y, w: baseCellW, h: interior.h / 12 };
 const streetY = 642;
 const INGREDIENT_COST = 12;
-const DEBUG_VERSION = "v73";
+const DEBUG_VERSION = "v74";
 const SEATED_Y_OFFSET = -50;
 const WEEKLY_RENT = 5000;
 const VICTORY_CASH = 300000;
@@ -121,6 +121,7 @@ const STAFF_CANDIDATES = [
   { id: "ming", name: "明叔", salary: 60, base: { charm: 2, patience: 6 }, skills: { serve: 1, seat: 1, checkout: 3, toilet: 3 } },
   { id: "tung", name: "東東", salary: 82, base: { charm: 5, patience: 4 }, skills: { serve: 4, seat: 2, checkout: 2, toilet: 1 } }
 ];
+const FEMALE_STAFF_IDS = new Set(["mei", "yan", "ling", "sum"]);
 
 const objectConfig = {
   table: { cols: 1, rows: 1, drawW: 56, drawH: 50, blocks: true, label: "餐桌" },
@@ -149,7 +150,7 @@ const spriteCounts = {
   toilet: 1
 };
 
-let assets = { map: null, atlas: null, sprites: {}, tableSingle: null, waiterWalk: null, customerWalks: [], customerSit: null, customerFemaleSit: null };
+let assets = { map: null, atlas: null, sprites: {}, tableSingle: null, waiterWalk: null, waiterWalks: [], customerWalks: [], customerSit: null, customerFemaleSit: null };
 let last = performance.now();
 let selectedObject = null;
 let pointerDrag = null;
@@ -582,7 +583,8 @@ function createStaffFromCandidate(candidate, index) {
     happiness: 76 + Math.floor(Math.random() * 12),
     actions: 0,
     otSeconds: 0,
-    variant: index % atlasRegions.waiter.length
+    variant: index % atlasRegions.waiter.length,
+    walkVariant: FEMALE_STAFF_IDS.has(candidate.id) ? 1 : 0
   };
 }
 
@@ -971,6 +973,7 @@ function openRestaurant() {
       task: null,
       carrying: null,
       variant: stats.variant % atlasRegions.waiter.length,
+      walkVariant: stats.walkVariant || 0,
       label: stats.name,
       facing: "down",
       stats
@@ -1867,7 +1870,8 @@ function drawAsset(type, variant, x, y, w, h) {
 }
 
 function drawWaiterSprite(actor, x, y, w, h) {
-  if (!assets.waiterWalk) {
+  const sheet = assets.waiterWalks?.[(actor.walkVariant ?? actor.stats?.walkVariant ?? 0) % (assets.waiterWalks.length || 1)] || assets.waiterWalk;
+  if (!sheet) {
     drawAsset("waiter", actor.variant || 0, x, y, w, h);
     return;
   }
@@ -1876,7 +1880,7 @@ function drawWaiterSprite(actor, x, y, w, h) {
   const moving = actor.path?.length || actor.task;
   const frame = moving ? Math.floor(performance.now() / 120) % 8 : 0;
   const cell = 128;
-  ctx.drawImage(assets.waiterWalk, frame * cell, row * cell, cell, cell, x - w / 2, y - h / 2, w, h);
+  ctx.drawImage(sheet, frame * cell, row * cell, cell, cell, x - w / 2, y - h / 2, w, h);
 }
 
 function drawCustomerSprite(actor, x, y, w, h, moving = false, facing = null) {
@@ -1924,7 +1928,8 @@ function customerPortraitSrc(customer) {
 }
 
 function waiterPortraitSrc(waiter) {
-  return spriteFrameSrc(assets.waiterWalk, 0, 0) || `assets/sprites/waiter-${waiter.variant % spriteCounts.waiter}.png?v=21`;
+  const sheet = assets.waiterWalks?.[(waiter.walkVariant ?? waiter.stats?.walkVariant ?? 0) % (assets.waiterWalks.length || 1)] || assets.waiterWalk;
+  return spriteFrameSrc(sheet, 0, 0) || `assets/sprites/waiter-${waiter.variant % spriteCounts.waiter}.png?v=21`;
 }
 
 function isCustomerSeated(actor) {
@@ -2764,10 +2769,11 @@ Promise.all([
   loadSprites().catch(() => ({})),
   loadImage("assets/sprites/table-single.png?v=1").catch(() => null),
   loadImage("assets/sprites/waiter-walk-sheet.png?v=1").catch(() => null),
+  loadImage("assets/sprites/waitress-walk-sheet.png?v=1").catch(() => null),
   loadImage("assets/sprites/customer-walk-sheet.png?v=1").catch(() => null),
   loadImage("assets/sprites/customer-walk-female-sheet.png?v=1").catch(() => null),
   loadImage("assets/generated_customer_walk/customer-sit.png?v=1").catch(() => null),
   loadImage("assets/generated_customer_female_walk/customer-female-sit.png?v=1").catch(() => null)
-]).then(([map, atlas, sprites, tableSingle, waiterWalk, customerWalk, customerWalkFemale, customerSit, customerFemaleSit]) => {
-  assets = { map, atlas, sprites, tableSingle, waiterWalk, customerWalks: [customerWalk, customerWalkFemale].filter(Boolean), customerSit, customerFemaleSit };
+]).then(([map, atlas, sprites, tableSingle, waiterWalk, waitressWalk, customerWalk, customerWalkFemale, customerSit, customerFemaleSit]) => {
+  assets = { map, atlas, sprites, tableSingle, waiterWalk, waiterWalks: [waiterWalk, waitressWalk].filter(Boolean), customerWalks: [customerWalk, customerWalkFemale].filter(Boolean), customerSit, customerFemaleSit };
 });
