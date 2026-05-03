@@ -56,8 +56,9 @@ const baseCellW = interior.w / 30;
 const grid = { cols: 24, rows: 12, x: interior.x + baseCellW * 3, y: interior.y, w: baseCellW, h: interior.h / 12 };
 const streetY = 642;
 const INGREDIENT_COST = 12;
-const DEBUG_VERSION = "v77";
-const SEATED_Y_OFFSET = -50;
+const DEBUG_VERSION = "v79";
+const GAME_OVER_NEGATIVE_DAYS = 7;
+const SEATED_Y_OFFSET = -13;
 const WEEKLY_RENT = 5000;
 const VICTORY_CASH = 300000;
 const TABLE_COST = 250;
@@ -178,6 +179,7 @@ const state = {
   served: 0,
   totalServed: 0,
   negativeCashDays: 0,
+  negativeSatisfactionDays: 0,
   victoryShown: false,
   gameOver: false,
   lost: 0,
@@ -400,7 +402,8 @@ function hideTablePurchasePopup() {
 function showMorningNoticePopup() {
   const notices = [];
   if (state.day % 7 === 0) notices.push(`今天需要交租，租金是 $${WEEKLY_RENT}。`);
-  if (state.cash < 0 && state.negativeCashDays > 0) notices.push(`現金現在是負數；連續 3 天負錢就會 Game Over，今天是連續負錢第 ${state.negativeCashDays} 天。`);
+  if (state.cash < 0 && state.negativeCashDays > 0) notices.push(`現金現在是負數；連續 ${GAME_OVER_NEGATIVE_DAYS} 天負數就會被總公司辭退，今天是現金連續負數第 ${state.negativeCashDays} 天。`);
+  if (state.satisfaction < 0 && state.negativeSatisfactionDays > 0) notices.push(`滿意度現在是負數；連續 ${GAME_OVER_NEGATIVE_DAYS} 天負數就會被總公司辭退，今天是滿意度連續負數第 ${state.negativeSatisfactionDays} 天。`);
   if (!notices.length) return;
   ui.morningNoticeBody.innerHTML = notices.map(text => `<div>${text}</div>`).join("");
   ui.morningNoticePopup.hidden = false;
@@ -681,6 +684,7 @@ function resetGame() {
   state.served = 0;
   state.totalServed = 0;
   state.negativeCashDays = 0;
+  state.negativeSatisfactionDays = 0;
   state.victoryShown = false;
   state.gameOver = false;
   state.lost = 0;
@@ -885,8 +889,8 @@ function tableSeatCell(table) {
   return nearestServiceCell(entrance, table)?.cell || null;
 }
 
-function seatedPixels(seat) {
-  const pixels = cellCenter(seat);
+function seatedPixels(table, fallbackSeat = null) {
+  const pixels = table ? { x: table.x, y: table.y } : cellCenter(fallbackSeat);
   return { x: pixels.x, y: pixels.y + SEATED_Y_OFFSET };
 }
 
@@ -1072,6 +1076,7 @@ function settleDay() {
   spendCash(salaries);
   if (rent) spendCash(rent);
   state.negativeCashDays = state.cash < 0 ? state.negativeCashDays + 1 : 0;
+  state.negativeSatisfactionDays = state.satisfaction < 0 ? state.negativeSatisfactionDays + 1 : 0;
   state.settlement = {
     gross: state.gross,
     salaries,
@@ -1079,6 +1084,7 @@ function settleDay() {
     rent,
     net,
     negativeCashDays: state.negativeCashDays,
+    negativeSatisfactionDays: state.negativeSatisfactionDays,
     leftovers: menuLeftovers()
   };
   adjustAllWaiterHappiness(50);
@@ -1086,9 +1092,9 @@ function settleDay() {
   state.mode = "ended";
   flash(`營業完結：總收入 $${state.gross}，淨利 $${net}。`);
   maybeShowVictory();
-  if (state.negativeCashDays >= 3) {
+  if (state.negativeCashDays >= GAME_OVER_NEGATIVE_DAYS || state.negativeSatisfactionDays >= GAME_OVER_NEGATIVE_DAYS) {
     state.gameOver = true;
-    showResultPopup("Game Over", "餐廳連續 3 天結算後現金為負數，資金鏈斷裂。請按「重新開始」重新經營。", "gameover");
+    showResultPopup("Game Over", `餐廳連續 ${GAME_OVER_NEGATIVE_DAYS} 天結算後現金或滿意度為負數，你已被總公司辭退。請按「重新開始」重新經營。`, "gameover");
   }
 }
 
@@ -1280,7 +1286,7 @@ function maybeUseToilet(customer) {
     return;
   }
 
-  const seatPixels = seatedPixels(seat);
+  const seatPixels = seatedPixels(table, seat);
   customer.x = seatPixels.x;
   customer.y = seatPixels.y;
   customer.grid = { ...seat };
@@ -1564,7 +1570,7 @@ function updateWaiter(waiter, dt) {
       task.customer.state = "思考";
       task.customer.table = task.table;
       task.customer.timer = 3 + Math.random() * 8;
-      const seatPixels = seatedPixels(task.seat);
+      const seatPixels = seatedPixels(task.table, task.seat);
       task.customer.grid = { ...task.seat };
       task.customer.x = seatPixels.x;
       task.customer.y = seatPixels.y;
@@ -2212,6 +2218,7 @@ function updateSettlementPopup() {
     rent: 0,
     net: state.gross - state.ingredientCost,
     negativeCashDays: state.negativeCashDays,
+    negativeSatisfactionDays: state.negativeSatisfactionDays,
     leftovers: menuLeftovers()
   };
   const leftovers = result.leftovers || [];
@@ -2227,7 +2234,8 @@ function updateSettlementPopup() {
     </div>
     <div class="settlement-line">完成 ${state.served} 單 · 流失 ${state.lost} 位 · 走數 ${state.walkouts || 0} · 浪費 ${state.wastedFood || 0} 份</div>
     <div class="settlement-line">餐廳累計營業額 $${state.totalGross} · 累計完成 ${state.totalServed} 單</div>
-    ${(result.negativeCashDays || 0) > 0 ? `<div class="settlement-line">連續負現金日數 ${result.negativeCashDays} / 3</div>` : ""}
+    ${(result.negativeCashDays || 0) > 0 ? `<div class="settlement-line">連續負現金日數 ${result.negativeCashDays} / ${GAME_OVER_NEGATIVE_DAYS}</div>` : ""}
+    ${(result.negativeSatisfactionDays || 0) > 0 ? `<div class="settlement-line">連續負滿意度日數 ${result.negativeSatisfactionDays} / ${GAME_OVER_NEGATIVE_DAYS}</div>` : ""}
     ${(result.rent || 0) > 0 ? `<div class="settlement-line">今日已交租 $${result.rent}</div>` : ""}
     <div class="settlement-subtitle">今日剩餘菜式</div>
     <div class="leftover-list">
