@@ -53,8 +53,8 @@ const baseCellW = interior.w / 30;
 const grid = { cols: 24, rows: 12, x: interior.x + baseCellW * 3, y: interior.y, w: baseCellW, h: interior.h / 12 };
 const streetY = 642;
 const INGREDIENT_COST = 12;
-const DEBUG_VERSION = "v72";
-const SEATED_Y_OFFSET = -25;
+const DEBUG_VERSION = "v73";
+const SEATED_Y_OFFSET = -50;
 const WEEKLY_RENT = 5000;
 const VICTORY_CASH = 300000;
 const TABLE_COST = 250;
@@ -1547,24 +1547,17 @@ function updateWaiter(waiter, dt) {
 
   if (task.kind === "seat") {
     if (task.step === 0 && moveAlongPath(waiter, dt, taskSpeed)) {
-      task.customer.state = "入座";
+      task.customer.state = "思考";
+      task.customer.table = task.table;
+      task.customer.timer = 3 + Math.random() * 8;
       const seatPixels = seatedPixels(task.seat);
       task.customer.grid = { ...task.seat };
       task.customer.x = seatPixels.x;
       task.customer.y = seatPixels.y;
-      setPath(waiter, task.seat);
-      task.step = 1;
-    } else if (task.step === 1) {
-      const waiterArrived = moveAlongPath(waiter, dt, taskSpeed);
-      if (waiterArrived) {
-        task.customer.state = "思考";
-        task.customer.table = task.table;
-        task.customer.timer = 3 + Math.random() * 8;
-        clearNeed(task.customer);
-        gainWaiterXp(waiter, "seat");
-        adjustWaiterHappiness(waiter, 0.15);
-        finishWaiterTask(waiter);
-      }
+      clearNeed(task.customer);
+      gainWaiterXp(waiter, "seat");
+      adjustWaiterHappiness(waiter, 0.15);
+      finishWaiterTask(waiter);
     }
   }
 
@@ -1940,17 +1933,17 @@ function isCustomerSeated(actor) {
 
 function bubbleDisplayText(text) {
   return {
-    "...": "🤔",
-    "等位": "等位",
-    "點菜": "點菜",
-    "等餐": "等餐",
-    "上菜": "上菜",
-    "結帳": "結帳",
-    "用餐": "用餐",
+    "...": "💬",
+    "等位": "🪑",
+    "點菜": "🍝",
+    "等餐": "🍝",
+    "上菜": "🍝",
+    "結帳": "💳️",
+    "用餐": "😋",
     "滿足": "😊",
     "憤怒": "😡",
-    "清潔中": "清潔中",
-    "骯髒": "骯髒"
+    "清潔中": "🫧",
+    "骯髒": "🧹"
   }[text] || text;
 }
 
@@ -1967,7 +1960,11 @@ function drawBubble(x, y, text, color = "#fff4cf") {
   ctx.fill();
   ctx.stroke();
   ctx.fillStyle = "#2b2114";
+  if(isEmoji){
+  ctx.fillText(displayText, x - tw / 2, y - 10);
+  }else{
   ctx.fillText(displayText, x - tw / 2, y - 12);
+  }
   ctx.restore();
 }
 
@@ -2006,8 +2003,8 @@ function render() {
   }
   for (const t of state.tables) {
     drawPlacedObject(t);
-    if (t.order === "served") drawAsset("food", t.variant, t.x + 2, t.y - 12, 21, 15);
-    if (t.dirty) drawAsset("dirty", t.variant, t.x + 1, t.y - 12, 23, 15);
+    if (t.order === "served") drawAsset("food", t.variant, t.x , t.y , 21, 15);
+    if (t.dirty) drawAsset("dirty", t.variant, t.x , t.y, 23, 15);
   }
 
   if (state.mode === "setup") drawSetupStaff();
