@@ -35,6 +35,9 @@ const ui = {
   restart: document.getElementById("restartBtn"),
   introPopup: document.getElementById("introPopup"),
   introConfirm: document.getElementById("introConfirmBtn"),
+  morningNoticePopup: document.getElementById("morningNoticePopup"),
+  morningNoticeBody: document.getElementById("morningNoticeBody"),
+  morningNoticeConfirm: document.getElementById("morningNoticeConfirmBtn"),
   toast: document.getElementById("toast"),
   toolbox: document.querySelector(".toolbox"),
   open: document.getElementById("openBtn"),
@@ -53,7 +56,7 @@ const baseCellW = interior.w / 30;
 const grid = { cols: 24, rows: 12, x: interior.x + baseCellW * 3, y: interior.y, w: baseCellW, h: interior.h / 12 };
 const streetY = 642;
 const INGREDIENT_COST = 12;
-const DEBUG_VERSION = "v74";
+const DEBUG_VERSION = "v77";
 const SEATED_Y_OFFSET = -50;
 const WEEKLY_RENT = 5000;
 const VICTORY_CASH = 300000;
@@ -394,6 +397,15 @@ function hideTablePurchasePopup() {
   ui.tablePurchasePopup.hidden = true;
 }
 
+function showMorningNoticePopup() {
+  const notices = [];
+  if (state.day % 7 === 0) notices.push(`今天需要交租，租金是 $${WEEKLY_RENT}。`);
+  if (state.cash < 0 && state.negativeCashDays > 0) notices.push(`現金現在是負數；連續 3 天負錢就會 Game Over，今天是連續負錢第 ${state.negativeCashDays} 天。`);
+  if (!notices.length) return;
+  ui.morningNoticeBody.innerHTML = notices.map(text => `<div>${text}</div>`).join("");
+  ui.morningNoticePopup.hidden = false;
+}
+
 function menuLeftovers() {
   return Object.values(state.menu).map(food => ({
     name: food.name,
@@ -405,10 +417,7 @@ function menuLeftovers() {
 
 function showUnlockPopup(items) {
   if (!items.length) return;
-  ui.unlockList.innerHTML = items
-    .map(item => `<div class="unlock-item">${item.name}</div>`)
-    .join("");
-  ui.unlockPopup.hidden = false;
+  flash(`新菜式解鎖：${items.map(item => item.name).join("、")}`);
 }
 
 function checkFoodUnlocks() {
@@ -692,6 +701,7 @@ function resetGame() {
   ui.unlockPopup.hidden = true;
   ui.resultPopup.hidden = true;
   ui.introPopup.hidden = false;
+  ui.morningNoticePopup.hidden = true;
   ui.tablePurchasePopup.hidden = true;
   ui.menu.hidden = true;
   ui.recruit.hidden = true;
@@ -749,6 +759,7 @@ function startNextDay() {
   fillMenuInputs();
   renderRecruitPanel();
   flash(`第 ${state.day} 天早上，可以重新設置設施、員工位置和今日菜單。`);
+  showMorningNoticePopup();
 }
 
 function buildBlockedGrid(ignoreItem = null) {
@@ -2158,21 +2169,23 @@ function drawToiletStatus(toilet) {
 
 function drawPlacedObject(item) {
   const colors = { table: "#d6a65b", kitchen: "#8fb8c8", toilet: "#b58cff" };
-  ctx.save();
-  ctx.fillStyle = colors[item.type] || "#d6a65b";
-  ctx.globalAlpha = 0.72;
-  ctx.strokeStyle = selectedObject === item ? "rgba(84, 194, 124, 0.95)" : "rgba(40, 26, 12, 0.32)";
-  ctx.lineWidth = selectedObject === item ? 3 : 1;
-  roundRect(item.x - item.w / 2 - 4, item.y - item.h / 2 - 4, item.w + 8, item.h + 8, 10);
-  ctx.fill();
-  ctx.globalAlpha = 1;
-  ctx.stroke();
-  ctx.fillStyle = "#1f1a12";
-  ctx.font = "700 16px sans-serif";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(objectConfig[item.type].label, item.x, item.y);
-  ctx.restore();
+  if (state.mode === "setup") {
+    ctx.save();
+    ctx.fillStyle = colors[item.type] || "#d6a65b";
+    ctx.globalAlpha = 0.72;
+    ctx.strokeStyle = selectedObject === item ? "rgba(84, 194, 124, 0.95)" : "rgba(40, 26, 12, 0.32)";
+    ctx.lineWidth = selectedObject === item ? 3 : 1;
+    roundRect(item.x - item.w / 2 - 4, item.y - item.h / 2 - 4, item.w + 8, item.h + 8, 10);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.stroke();
+    ctx.fillStyle = "#1f1a12";
+    ctx.font = "700 16px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(objectConfig[item.type].label, item.x, item.y);
+    ctx.restore();
+  }
 
   const drewImage = drawAsset(item.type, item.variant, item.x, item.y, item.w, item.h);
   if (drewImage) return;
@@ -2665,6 +2678,9 @@ ui.restart.addEventListener("click", resetGame);
 ui.introConfirm.addEventListener("click", () => {
   ui.introPopup.hidden = true;
   flash("先放好餐桌、廚房和廁所，設定菜單後便可正式開店營業。");
+});
+ui.morningNoticeConfirm.addEventListener("click", () => {
+  ui.morningNoticePopup.hidden = true;
 });
 ui.addTable.addEventListener("click", addTable);
 ui.deleteTable.addEventListener("click", deleteSelectedTable);
